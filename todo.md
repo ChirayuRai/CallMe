@@ -1,0 +1,3 @@
+- [ ] Client loads into page where websocket server is connected to
+- [ ] Have a call button which generates the appropriate SDP offer
+- [ ] 
