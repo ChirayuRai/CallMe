@@ -108,6 +108,7 @@ class VideoCallApp {
     }
 
     handleDeclineCall() {
+        this.uiManager.deletePendingOffer();
         this.uiManager.hideIncomingCall();
     }
 }

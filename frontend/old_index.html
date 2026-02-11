@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Current User ID: <span id="IdDisplay"></span></h1>
+    <div id="localVideoOnly" class="hidden">
+        <video id="localVideoFullscreen" autoplay playsinline muted></video>
+    </div>
+    <div id="localAndRemoteVideo" class="hidden">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideoPip" autoplay playsinline muted></video>
+    </div>
+    <label for="callInput">Call: </label>
+    <input type="text" id="callInput" placeholder="Enter the ID of the person you want to call"></input>
+    <button type="submit" id="callButton">Call</button>
+    <div id="incomingCall" class="hidden">
+        <span id="incomingCaller"></span>
+            <button id="acceptCall">Accept</button>
+            <button id="declineCall">Decline</button>
+    </div>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -27,6 +27,11 @@ export class UIManager {
         elements.incomingCallDiv.classList.add('hidden');
     }
 
+    deletePendingOffer() {
+        this.state.pendingOffer = null;
+        return;
+    }
+
     getPendingOffer() {
         return this.state.pendingOffer;
     }

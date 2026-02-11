@@ -1,28 +1,792 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>FaceTime</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <h1>Current User ID: <span id="IdDisplay"></span></h1>
-    <div id="localVideoOnly" class="hidden">
-        <video id="localVideoFullscreen" autoplay playsinline muted></video>
+  <div id="app">
+    <!-- Mobile header -->
+    <div id="mobile-header">
+      <button class="btn-icon" id="menu-btn" aria-label="Open menu"></button>
+      <h1>FaceTime</h1>
+      <button class="btn-icon" id="mobile-settings-btn" aria-label="Settings"></button>
     </div>
-    <div id="localAndRemoteVideo" class="hidden">
-        <video id="remoteVideo" autoplay playsinline></video>
-        <video id="localVideoPip" autoplay playsinline muted></video>
+
+    <!-- Sidebar overlay for mobile -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h1>FaceTime</h1>
+      </div>
+      <div class="sidebar-search">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="search-input" placeholder="Search contacts..." autocomplete="off">
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="btn-add" id="add-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add Contact
+        </button>
+      </div>
+      <div id="contacts-list"></div>
+      <div class="sidebar-footer">
+        <button class="btn-footer" id="settings-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+        <button class="btn-footer" id="sim-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.69 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.33 1.55.56 2.36.69A2 2 0 0 1 22 16.92z"/></svg>
+          Simulate Call
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main area -->
+    <main id="main-content">
+      <!-- Idle -->
+      <div id="idle-screen">
+        <div class="idle-inner">
+          <div class="idle-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 2 5 5-5 5"/><path d="M21 7H9"/><path d="m8 22-5-5 5-5"/><path d="M3 17h12"/></svg>
+          </div>
+          <h2>FaceTime</h2>
+          <p>Select a contact from the sidebar to start a video call</p>
+        </div>
+      </div>
+
+      <!-- Calling -->
+      <div id="calling-screen" class="hidden">
+        <div class="calling-inner">
+          <div class="calling-avatar-wrap">
+            <div class="avatar-circle" id="calling-avatar"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+          </div>
+          <h2 id="calling-name"></h2>
+          <p class="calling-label">FaceTime Video...</p>
+          <button class="btn-end" id="cancel-call-btn" aria-label="Cancel call"></button>
+        </div>
+      </div>
+
+      <!-- In-call -->
+      <div id="call-screen" class="hidden">
+        <div id="remote-area"></div>
+        <div id="pip-wrap">
+          <video id="local-video" autoplay playsinline muted></video>
+          <div class="pip-no-cam hidden" id="pip-no-cam">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+          </div>
+        </div>
+        <div id="call-info">
+          <span class="info-name" id="info-name"></span>
+          <span class="info-timer" id="info-timer">00:00</span>
+        </div>
+        <div id="call-controls">
+          <button class="ctrl-btn" id="ctrl-mute" aria-label="Mute">
+            <span class="ctrl-label">Mute</span>
+          </button>
+          <button class="ctrl-btn" id="ctrl-cam" aria-label="Camera">
+            <span class="ctrl-label">Camera</span>
+          </button>
+          <button class="ctrl-btn" id="ctrl-flip" aria-label="Flip camera">
+            <span class="ctrl-label">Flip</span>
+          </button>
+          <button class="ctrl-btn end-call" id="ctrl-end" aria-label="End call">
+          </button>
+          <button class="ctrl-btn" id="ctrl-settings" aria-label="Settings">
+            <span class="ctrl-label">More</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Incoming call banner -->
+    <div id="incoming-call">
+      <div class="incoming-inner">
+        <div class="incoming-avatar" id="inc-avatar"></div>
+        <div class="incoming-info">
+          <h3 id="inc-name"></h3>
+          <p>FaceTime Video</p>
+        </div>
+        <div class="incoming-btns">
+          <button class="btn-round decline" id="inc-decline" aria-label="Decline">
+          </button>
+          <button class="btn-round accept" id="inc-accept" aria-label="Accept">
+          </button>
+        </div>
+      </div>
     </div>
-    <label for="callInput">Call: </label>
-    <input type="text" id="callInput" placeholder="Enter the ID of the person you want to call"></input>
-    <button type="submit" id="callButton">Call</button>
-    <div id="incomingCall" class="hidden">
-        <span id="incomingCaller"></span>
-            <button id="acceptCall">Accept</button>
-            <button id="declineCall">Decline</button>
+
+    <!-- Settings -->
+    <div id="settings-panel">
+      <div class="settings-box">
+        <div class="settings-head">
+          <h2>Settings</h2>
+          <button class="btn-close" id="close-settings" aria-label="Close settings"></button>
+        </div>
+        <div class="settings-body">
+          <div class="setting-group">
+            <label for="sel-camera">Camera</label>
+            <select id="sel-camera"><option>Default Camera</option></select>
+          </div>
+          <div class="setting-group">
+            <label for="sel-mic">Microphone</label>
+            <select id="sel-mic"><option>Default Microphone</option></select>
+          </div>
+          <div class="setting-group">
+            <label for="sel-speaker">Audio Output</label>
+            <select id="sel-speaker"><option>Default Speaker</option></select>
+          </div>
+          <div class="setting-group setting-toggle">
+            <span>Mirror Camera</span>
+            <button class="toggle-track on" id="toggle-mirror" aria-label="Toggle mirror camera"></button>
+          </div>
+        </div>
+      </div>
     </div>
-    <script type="module" src="src/main.js"></script>
+
+    <!-- Add contact modal -->
+    <div id="add-modal">
+      <div class="modal-box">
+        <h2>Add Contact</h2>
+        <input type="text" id="inp-name" placeholder="Name" autocomplete="off">
+        <input type="text" id="inp-detail" placeholder="Phone number or email" autocomplete="off">
+        <div class="modal-btns">
+          <button class="btn-m-cancel" id="modal-cancel">Cancel</button>
+          <button class="btn-m-confirm" id="modal-confirm">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===================================================================
+       FaceTime Clone — Vanilla JS
+       =================================================================== */
+
+    // ---- SVG Icon Helpers ----
+    
+    
+    const Icons = {
+      phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.69 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.76.33 1.55.56 2.36.69A2 2 0 0 1 22 16.92z"/></svg>',
+      video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.934a.5.5 0 0 0-.777-.416L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+      videoOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.66 5H14a2 2 0 0 1 2 2v2.34l1 .67 5.22 3.48a.5.5 0 0 0 .78-.42V7.93a.5.5 0 0 0-.78-.42L17 11"/><path d="M16 16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>',
+      mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
+      micOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
+      flip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>',
+      settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+      close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+      menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+      user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>'
+    };
+
+    // Inject icons into buttons that need them
+    document.getElementById('menu-btn').innerHTML = Icons.menu;
+    document.getElementById('mobile-settings-btn').innerHTML = Icons.settings;
+    document.getElementById('cancel-call-btn').innerHTML = Icons.phone;
+    document.getElementById('ctrl-mute').insertAdjacentHTML('afterbegin', Icons.mic);
+    document.getElementById('ctrl-cam').insertAdjacentHTML('afterbegin', Icons.video);
+    document.getElementById('ctrl-flip').insertAdjacentHTML('afterbegin', Icons.flip);
+    document.getElementById('ctrl-end').innerHTML = Icons.phone;
+    document.getElementById('ctrl-settings').insertAdjacentHTML('afterbegin', Icons.settings);
+    document.getElementById('inc-decline').innerHTML = Icons.phone;
+    document.getElementById('inc-accept').innerHTML = Icons.video;
+    document.getElementById('close-settings').innerHTML = Icons.close;
+
+    // ---- State ----
+    const AVATAR_COLORS = [
+      '#ff6b6b','#cc5de8','#845ef7','#5c7cfa','#339af0',
+      '#22b8cf','#20c997','#51cf66','#fcc419','#ff922b',
+      '#f06595','#7950f2','#4c6ef5','#15aabf','#12b886',
+      '#82c91e','#fab005','#fd7e14','#e64980','#be4bdb'
+    ];
+
+    let state = {
+      contacts: [
+        { id: 1, name: 'Alex Johnson', detail: '+1 (555) 234-5678', online: true },
+        { id: 2, name: 'Sarah Chen', detail: 'sarah.chen@email.com', online: true },
+        { id: 3, name: 'Mike Williams', detail: '+1 (555) 876-5432', online: false },
+        { id: 4, name: 'Emma Davis', detail: 'emma.d@email.com', online: true },
+        { id: 5, name: 'James Wilson', detail: '+1 (555) 111-2233', online: false },
+        { id: 6, name: 'Olivia Martinez', detail: 'olivia.m@email.com', online: true },
+        { id: 7, name: 'Liam Brown', detail: '+1 (555) 444-7788', online: false },
+        { id: 8, name: 'Sophia Lee', detail: 'sophia.lee@email.com', online: true },
+      ],
+      nextId: 9,
+      screen: 'idle',       // idle | calling | incall
+      activeContact: null,
+      isMuted: false,
+      isCamOff: false,
+      isMirrored: true,
+      callSeconds: 0,
+      callTimer: null,
+      localStream: null,
+      facingMode: 'user',
+      incomingContact: null,
+    };
+
+    // ---- DOM Refs ----
+    const $ = (sel) => document.querySelector(sel);
+    const sidebar      = $('#sidebar');
+    const sidebarOvl   = $('#sidebar-overlay');
+    const contactsList = $('#contacts-list');
+    const searchInput  = $('#search-input');
+    const idleScreen   = $('#idle-screen');
+    const callingScr   = $('#calling-screen');
+    const callScreen   = $('#call-screen');
+    const callingAvatar= $('#calling-avatar');
+    const callingName  = $('#calling-name');
+    const remoteArea   = $('#remote-area');
+    const localVideo   = $('#local-video');
+    const pipWrap      = $('#pip-wrap');
+    const pipNoCam     = $('#pip-no-cam');
+    const infoName     = $('#info-name');
+    const infoTimer    = $('#info-timer');
+    const incomingEl   = $('#incoming-call');
+    const incAvatar    = $('#inc-avatar');
+    const incName      = $('#inc-name');
+    const settingsPanel= $('#settings-panel');
+    const addModal     = $('#add-modal');
+
+    // ---- Helpers ----
+    function getInitials(name) {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+      return name.slice(0,2).toUpperCase();
+    }
+
+    function getColor(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+    }
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    }
+
+    function isMobile() { return window.innerWidth <= 768; }
+
+    // ---- Render Contacts ----
+    function renderContacts(filter = '') {
+      const q = filter.toLowerCase();
+      const filtered = state.contacts.filter(c => c.name.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q));
+
+      if (filtered.length === 0) {
+        contactsList.innerHTML = '<div class="no-contacts"><p>' + (filter ? 'No contacts found' : 'No contacts yet. Add someone to get started!') + '</p></div>';
+        return;
+      }
+
+      contactsList.innerHTML = filtered.map(c => {
+        const color = getColor(c.name);
+        const initials = getInitials(c.name);
+        return '<div class="contact-item" data-id="' + c.id + '">' +
+          '<div class="contact-avatar" style="background:' + color + '">' + initials + '</div>' +
+          '<div class="contact-details">' +
+            '<div class="contact-name">' + c.name + '</div>' +
+            '<div class="contact-sub">' + c.detail + '</div>' +
+          '</div>' +
+          '<button class="contact-call" data-call="' + c.id + '" aria-label="Call ' + c.name + '">' + Icons.video + '</button>' +
+        '</div>';
+      }).join('');
+
+      // Attach click handlers
+      contactsList.querySelectorAll('.contact-call').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.dataset.call);
+          const contact = state.contacts.find(c => c.id === id);
+          if (contact) startCall(contact);
+        });
+      });
+
+      contactsList.querySelectorAll('.contact-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const id = parseInt(item.dataset.id);
+          const contact = state.contacts.find(c => c.id === id);
+          if (contact) startCall(contact);
+        });
+      });
+    }
+
+    // ---- Screen Management ----
+    function showScreen(name) {
+      state.screen = name;
+      idleScreen.classList.toggle('hidden', name !== 'idle');
+      callingScr.classList.toggle('hidden', name !== 'calling');
+      callScreen.classList.toggle('hidden', name !== 'incall');
+    }
+
+    // ---- Call Flow ----
+    function startCall(contact) {
+      state.activeContact = contact;
+      showScreen('calling');
+
+      // Close sidebar on mobile
+      if (isMobile()) closeSidebar();
+
+      // Set calling screen info
+      callingAvatar.textContent = getInitials(contact.name);
+      callingAvatar.style.background = getColor(contact.name);
+      callingName.textContent = contact.name;
+
+      // Simulate ringing for 3 seconds then connect
+      setTimeout(() => {
+        if (state.screen === 'calling' && state.activeContact === contact) {
+          connectCall(contact);
+        }
+      }, 3000);
+    }
+
+    async function connectCall(contact) {
+      showScreen('incall');
+
+      // Remote area (simulated)
+      const color = getColor(contact.name);
+      remoteArea.innerHTML =
+        '<div class="remote-fallback">' +
+          '<div class="big-avatar" style="background:' + color + '">' + getInitials(contact.name) + '</div>' +
+          '<div class="remote-label">' + contact.name + '</div>' +
+        '</div>';
+
+      infoName.textContent = contact.name;
+      state.callSeconds = 0;
+      infoTimer.textContent = '00:00';
+
+      // Start timer
+      state.callTimer = setInterval(() => {
+        state.callSeconds++;
+        infoTimer.textContent = formatTime(state.callSeconds);
+      }, 1000);
+
+      // Reset control states
+      state.isMuted = false;
+      state.isCamOff = false;
+      updateControlIcons();
+
+      // Start local camera
+      await startLocalCamera();
+    }
+
+    function endCall() {
+      if (state.callTimer) { clearInterval(state.callTimer); state.callTimer = null; }
+      stopLocalCamera();
+      state.activeContact = null;
+      showScreen('idle');
+    }
+
+    function cancelCall() {
+      state.activeContact = null;
+      showScreen('idle');
+    }
+
+    // ---- Camera / Media ----
+    async function startLocalCamera() {
+      try {
+        const constraints = {
+          video: { facingMode: state.facingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: true
+        };
+        state.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        localVideo.srcObject = state.localStream;
+        localVideo.classList.toggle('no-mirror', !state.isMirrored);
+        pipWrap.classList.remove('hidden');
+        pipNoCam.classList.add('hidden');
+        localVideo.classList.remove('hidden');
+
+        // Mute audio track if user had muted
+        state.localStream.getAudioTracks().forEach(t => t.enabled = !state.isMuted);
+
+        // Populate device settings
+        enumerateDevices();
+      } catch (err) {
+        // Camera access denied or unavailable
+        localVideo.classList.add('hidden');
+        pipNoCam.classList.remove('hidden');
+      }
+    }
+
+    function stopLocalCamera() {
+      if (state.localStream) {
+        state.localStream.getTracks().forEach(t => t.stop());
+        state.localStream = null;
+      }
+      localVideo.srcObject = null;
+    }
+
+    function toggleMute() {
+      state.isMuted = !state.isMuted;
+      if (state.localStream) {
+        state.localStream.getAudioTracks().forEach(t => t.enabled = !state.isMuted);
+      }
+      updateControlIcons();
+    }
+
+    function toggleCamera() {
+      state.isCamOff = !state.isCamOff;
+      if (state.localStream) {
+        state.localStream.getVideoTracks().forEach(t => t.enabled = !state.isCamOff);
+      }
+      if (state.isCamOff) {
+        localVideo.classList.add('hidden');
+        pipNoCam.classList.remove('hidden');
+      } else {
+        localVideo.classList.remove('hidden');
+        pipNoCam.classList.add('hidden');
+      }
+      updateControlIcons();
+    }
+
+    async function flipCamera() {
+      state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
+      if (state.localStream && state.screen === 'incall') {
+        stopLocalCamera();
+        await startLocalCamera();
+      }
+    }
+
+    function updateControlIcons() {
+      const muteBtn = $('#ctrl-mute');
+      const camBtn = $('#ctrl-cam');
+
+      // Update mute button
+      const muteLabel = muteBtn.querySelector('.ctrl-label');
+      muteBtn.innerHTML = state.isMuted ? Icons.micOff : Icons.mic;
+      muteBtn.classList.toggle('active', state.isMuted);
+      const ml = document.createElement('span');
+      ml.className = 'ctrl-label';
+      ml.textContent = state.isMuted ? 'Unmute' : 'Mute';
+      muteBtn.appendChild(ml);
+
+      // Update camera button
+      const camLabel = camBtn.querySelector('.ctrl-label');
+      camBtn.innerHTML = state.isCamOff ? Icons.videoOff : Icons.video;
+      camBtn.classList.toggle('active', state.isCamOff);
+      const cl = document.createElement('span');
+      cl.className = 'ctrl-label';
+      cl.textContent = state.isCamOff ? 'Camera On' : 'Camera Off';
+      camBtn.appendChild(cl);
+    }
+
+    // ---- Device Enumeration ----
+    async function enumerateDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const camSel = $('#sel-camera');
+        const micSel = $('#sel-mic');
+        const spkSel = $('#sel-speaker');
+
+        camSel.innerHTML = '';
+        micSel.innerHTML = '';
+        spkSel.innerHTML = '';
+
+        let camCount = 0, micCount = 0, spkCount = 0;
+
+        devices.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.deviceId;
+
+          if (d.kind === 'videoinput') {
+            camCount++;
+            opt.textContent = d.label || ('Camera ' + camCount);
+            camSel.appendChild(opt);
+          } else if (d.kind === 'audioinput') {
+            micCount++;
+            opt.textContent = d.label || ('Microphone ' + micCount);
+            micSel.appendChild(opt);
+          } else if (d.kind === 'audiooutput') {
+            spkCount++;
+            opt.textContent = d.label || ('Speaker ' + spkCount);
+            spkSel.appendChild(opt);
+          }
+        });
+
+        if (camSel.children.length === 0) camSel.innerHTML = '<option>No cameras found</option>';
+        if (micSel.children.length === 0) micSel.innerHTML = '<option>No microphones found</option>';
+        if (spkSel.children.length === 0) spkSel.innerHTML = '<option>Default Speaker</option>';
+      } catch(e) {
+        // Silently fail
+      }
+    }
+
+    // ---- Camera change from settings ----
+    async function changeCamera(deviceId) {
+      if (!state.localStream || state.screen !== 'incall') return;
+      stopLocalCamera();
+      try {
+        state.localStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: deviceId } },
+          audio: true
+        });
+        localVideo.srcObject = state.localStream;
+        state.localStream.getAudioTracks().forEach(t => t.enabled = !state.isMuted);
+        if (state.isCamOff) {
+          state.localStream.getVideoTracks().forEach(t => t.enabled = false);
+        }
+      } catch(e) {
+        await startLocalCamera();
+      }
+    }
+
+    // ---- Incoming Call ----
+    function simulateIncoming() {
+      // Pick a random contact that isn't the active one
+      const pool = state.contacts.filter(c => c !== state.activeContact);
+      if (pool.length === 0) return;
+      const contact = pool[Math.floor(Math.random() * pool.length)];
+      state.incomingContact = contact;
+
+      incAvatar.textContent = getInitials(contact.name);
+      incAvatar.style.background = getColor(contact.name);
+      incName.textContent = contact.name;
+
+      incomingEl.classList.add('show');
+    }
+
+    function acceptIncoming() {
+      incomingEl.classList.remove('show');
+      const contact = state.incomingContact;
+      state.incomingContact = null;
+
+      // End current call if any
+      if (state.screen === 'incall') endCall();
+      if (state.screen === 'calling') cancelCall();
+
+      // Start new call
+      if (contact) {
+        state.activeContact = contact;
+        connectCall(contact);
+      }
+    }
+
+    function declineIncoming() {
+      incomingEl.classList.remove('show');
+      state.incomingContact = null;
+    }
+
+    // ---- Sidebar Toggle (mobile) ----
+    function openSidebar() {
+      sidebar.classList.add('open');
+      sidebarOvl.classList.add('active');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      sidebarOvl.classList.remove('active');
+    }
+
+    // ---- Settings ----
+    function openSettings() {
+      enumerateDevices();
+      settingsPanel.classList.add('show');
+    }
+
+    function closeSettings() {
+      settingsPanel.classList.remove('show');
+    }
+
+    // ---- Add Contact ----
+    function openAddModal() {
+      $('#inp-name').value = '';
+      $('#inp-detail').value = '';
+      addModal.classList.add('show');
+      setTimeout(() => $('#inp-name').focus(), 100);
+    }
+
+    function closeAddModal() {
+      addModal.classList.remove('show');
+    }
+
+    function addContact() {
+      const name = $('#inp-name').value.trim();
+      const detail = $('#inp-detail').value.trim();
+      if (!name) return;
+      state.contacts.push({
+        id: state.nextId++,
+        name: name,
+        detail: detail || 'No details',
+        online: Math.random() > 0.5
+      });
+      closeAddModal();
+      renderContacts(searchInput.value);
+    }
+
+    // ---- PiP Drag ----
+    (function setupPipDrag() {
+      let isDragging = false;
+      let startX, startY, origX, origY;
+
+      function onStart(e) {
+        isDragging = true;
+        pipWrap.classList.add('dragging');
+        const touch = e.touches ? e.touches[0] : e;
+        const rect = pipWrap.getBoundingClientRect();
+        startX = touch.clientX;
+        startY = touch.clientY;
+        origX = rect.left;
+        origY = rect.top;
+        e.preventDefault();
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        let newX = origX + dx;
+        let newY = origY + dy;
+
+        // Get bounds from call-screen (the parent)
+        const parent = callScreen.getBoundingClientRect();
+        const pw = pipWrap.offsetWidth;
+        const ph = pipWrap.offsetHeight;
+        newX = Math.max(parent.left + 8, Math.min(newX, parent.right - pw - 8));
+        newY = Math.max(parent.top + 8, Math.min(newY, parent.bottom - ph - 8));
+
+        pipWrap.style.position = 'fixed';
+        pipWrap.style.left = newX + 'px';
+        pipWrap.style.top = newY + 'px';
+        pipWrap.style.right = 'auto';
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        pipWrap.classList.remove('dragging');
+
+        // Snap to nearest corner
+        const parent = callScreen.getBoundingClientRect();
+        const rect = pipWrap.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const midX = parent.left + parent.width / 2;
+        const midY = parent.top + parent.height / 2;
+        const pad = isMobile() ? 12 : 20;
+        const topPad = isMobile() ? 72 : 20;
+
+        let targetX, targetY;
+        if (cx < midX) {
+          targetX = parent.left + pad;
+        } else {
+          targetX = parent.right - rect.width - pad;
+        }
+        if (cy < midY) {
+          targetY = parent.top + topPad;
+        } else {
+          targetY = parent.bottom - rect.height - (isMobile() ? 100 : 120);
+        }
+
+        pipWrap.style.transition = 'left 0.25s cubic-bezier(0.25,0.1,0.25,1), top 0.25s cubic-bezier(0.25,0.1,0.25,1)';
+        pipWrap.style.left = targetX + 'px';
+        pipWrap.style.top = targetY + 'px';
+        setTimeout(() => { pipWrap.style.transition = ''; }, 300);
+      }
+
+      pipWrap.addEventListener('mousedown', onStart);
+      pipWrap.addEventListener('touchstart', onStart, { passive: false });
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onEnd);
+      document.addEventListener('touchend', onEnd);
+    })();
+
+    // Reset PiP position when entering a call
+    function resetPipPosition() {
+      pipWrap.style.position = '';
+      pipWrap.style.left = '';
+      pipWrap.style.top = '';
+      pipWrap.style.right = '';
+      pipWrap.style.transition = '';
+    }
+
+    // Patch connectCall to reset pip
+    const _origConnect = connectCall;
+    connectCall = async function(contact) {
+      resetPipPosition();
+      await _origConnect(contact);
+    };
+
+    // ---- Event Listeners ----
+
+    // Mobile menu
+    $('#menu-btn').addEventListener('click', openSidebar);
+    sidebarOvl.addEventListener('click', closeSidebar);
+
+    // Search
+    searchInput.addEventListener('input', () => renderContacts(searchInput.value));
+
+    // Add contact
+    $('#add-btn').addEventListener('click', openAddModal);
+    $('#modal-cancel').addEventListener('click', closeAddModal);
+    $('#modal-confirm').addEventListener('click', addContact);
+    $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
+    $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
+    addModal.addEventListener('click', (e) => { if (e.target === addModal) closeAddModal(); });
+
+    // Settings
+    $('#settings-btn').addEventListener('click', openSettings);
+    $('#mobile-settings-btn').addEventListener('click', openSettings);
+    $('#close-settings').addEventListener('click', closeSettings);
+    $('#ctrl-settings').addEventListener('click', openSettings);
+    settingsPanel.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
+
+    // Mirror toggle
+    $('#toggle-mirror').addEventListener('click', function() {
+      state.isMirrored = !state.isMirrored;
+      this.classList.toggle('on', state.isMirrored);
+      localVideo.classList.toggle('no-mirror', !state.isMirrored);
+    });
+
+    // Camera select change
+    $('#sel-camera').addEventListener('change', function() {
+      changeCamera(this.value);
+    });
+
+    // Audio output change
+    $('#sel-speaker').addEventListener('change', function() {
+      if (localVideo.setSinkId) {
+        localVideo.setSinkId(this.value).catch(() => {});
+      }
+    });
+
+    // Call controls
+    $('#ctrl-mute').addEventListener('click', toggleMute);
+    $('#ctrl-cam').addEventListener('click', toggleCamera);
+    $('#ctrl-flip').addEventListener('click', flipCamera);
+    $('#ctrl-end').addEventListener('click', endCall);
+    $('#cancel-call-btn').addEventListener('click', cancelCall);
+
+    // Incoming call
+    $('#sim-btn').addEventListener('click', simulateIncoming);
+    $('#inc-accept').addEventListener('click', acceptIncoming);
+    $('#inc-decline').addEventListener('click', declineIncoming);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'Escape') {
+        if (addModal.classList.contains('show')) closeAddModal();
+        else if (settingsPanel.classList.contains('show')) closeSettings();
+        else if (incomingEl.classList.contains('show')) declineIncoming();
+        else if (state.screen === 'calling') cancelCall();
+      }
+      if (e.key === 'm' && state.screen === 'incall') toggleMute();
+      if (e.key === 'v' && state.screen === 'incall') toggleCamera();
+    });
+
+    // ---- Init ----
+    renderContacts();
+    updateControlIcons();
+  </script>
 </body>
 </html>
