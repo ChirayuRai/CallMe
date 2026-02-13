@@ -29,6 +29,9 @@ class VideoCallApp {
         );
         this.websocketManager.connect();
 
+        // Inject buttons into UI
+        this.uiManager.setupButtons();
+
         // Setup UI event listeners
         this.uiManager.setupEventListeners(
             () => this.handleCall(),
