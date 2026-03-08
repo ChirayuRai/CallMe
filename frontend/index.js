@@ -11,7 +11,7 @@
 window.addEventListener("DOMContentLoaded", async () => {
     // VARIABLES
     const state = {
-        userID: "",
+        connectionID: "",
         pendingOffer: ""
     };
 
@@ -74,10 +74,10 @@ window.addEventListener("DOMContentLoaded", async () => {
         const event = JSON.parse(data);
 
         switch (event.state) {
-            case "addUserId":
-                state.userID = event.data.userID;
-                console.log("User id:", state.userID);
-                idText.textContent = state.userID;
+            case "addConnectionId":
+                state.connectionID = event.data.connectionID;
+                console.log("Connection id:", state.connectionID);
+                idText.textContent = state.connectionID;
                 break;
             case "pendingOffer":
                 console.log(event);
@@ -175,7 +175,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             const sendUserInfo = {
                 state : "sendOffer",
                 data : {
-                    callerID: state.userID,
+                    callerID: state.connectionID,
                     receiverID: callInput.value,
                     offer: peerConnection.localDescription
                 }

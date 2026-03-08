@@ -1,10 +1,13 @@
 // TODO: Just created this class, need to test it somehow. Also haven't quite finished adding everything to where it needs to go, figure that out
 // Next time
 class PipDragger {
-    constructor(pipWrap, callScreen, isMobile) {
+    constructor(pipWrap, callScreen, isMobile, connectCall) {
         this.pipWrap = pipWrap;
         this.callScreen = callScreen;
         this.isMobile = isMobile;
+        this.connectCall = connectCall;
+        // NOTE: This is how you would actually use this in the main function
+        // const b = new ServiceB(a.doSomething.bind(a)); // bind preserves `this` context
 
         this.isDragging = false;
         this.startX;
@@ -95,6 +98,21 @@ class PipDragger {
         document.addEventListener('mouseup', onEnd);
         document.addEventListener('touchend', onEnd);
     }
+
+
+    resetPipPosition() {
+      this.style.position = '';
+      this.style.left = '';
+      this.style.top = '';
+      this.style.right = '';
+      this.style.transition = '';
+    }
+
+    // Patch connectCall to reset pip
+    connectCall = async function(contact) {
+      this.resetPipPosition();
+      await this.connectCall(contact);
+    };
 
 
     setupPipDrag() {

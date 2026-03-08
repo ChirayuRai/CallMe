@@ -169,25 +169,6 @@
 
   <script>
 
-
-    // ---- PiP Drag ----
-
-    // Reset PiP position when entering a call
-    function resetPipPosition() {
-      pipWrap.style.position = '';
-      pipWrap.style.left = '';
-      pipWrap.style.top = '';
-      pipWrap.style.right = '';
-      pipWrap.style.transition = '';
-    }
-
-    // Patch connectCall to reset pip
-    const _origConnect = connectCall;
-    connectCall = async function(contact) {
-      resetPipPosition();
-      await _origConnect(contact);
-    };
-
     // ---- Event Listeners ----
 
     // Mobile menu

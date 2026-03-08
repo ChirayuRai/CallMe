@@ -29,29 +29,6 @@ export class UIManager {
             incomingContact: null,
         };
 
-
-        // TODO: Figure out where teh fuck this is all used lol
-        this.$ = (sel) => document.querySelector(sel);
-        this.sidebar      = this.$('#sidebar');
-        this.sidebarOvl   = this.$('#sidebar-overlay');
-        this.contactsList = this.$('#contacts-list');
-        this.searchInput  = this.$('#search-input');
-        this.idleScreen   = this.$('#idle-screen');
-        this.callingScr   = this.$('#calling-screen');
-        this.callScreen   = this.$('#call-screen');
-        this.callingAvatar= this.$('#calling-avatar');
-        this.callingName  = this.$('#calling-name');
-        this.remoteArea   = this.$('#remote-area');
-        this.localVideo   = this.$('#local-video');
-        this.pipWrap      = this.$('#pip-wrap');
-        this.pipNoCam     = this.$('#pip-no-cam');
-        this.infoName     = this.$('#info-name');
-        this.infoTimer    = this.$('#info-timer');
-        this.incomingEl   = this.$('#incoming-call');
-        this.incAvatar    = this.$('#inc-avatar');
-        this.incName      = this.$('#inc-name');
-        this.settingsPanel= this.$('#settings-panel');
-        this.addModal     = this.$('#add-modal');
     }
 
     setUserId(userId) {
@@ -93,11 +70,11 @@ export class UIManager {
       const filtered = this.state.contacts.filter(c => c.name.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q));
 
       if (filtered.length === 0) {
-        this.contactsList.innerHTML = '<div class="no-contacts"><p>' + (filter ? 'No contacts found' : 'No contacts yet. Add someone to get started!') + '</p></div>';
+        elements.contactsList.innerHTML = '<div class="no-contacts"><p>' + (filter ? 'No contacts found' : 'No contacts yet. Add someone to get started!') + '</p></div>';
         return;
       }
 
-      this.contactsList.innerHTML = filtered.map(c => {
+      elements.contactsList.innerHTML = filtered.map(c => {
         const color = this.getColor(c.name);
         const initials = this.getInitials(c.name);
         return '<div class="contact-item" data-id="' + c.id + '">' +
@@ -111,7 +88,7 @@ export class UIManager {
       }).join('');
 
       // Attach click handlers
-      this.contactsList.querySelectorAll('.contact-call').forEach(btn => {
+      elements.contactsList.querySelectorAll('.contact-call').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const id = parseInt(btn.dataset.call);
@@ -120,7 +97,7 @@ export class UIManager {
         });
       });
 
-      this.contactsList.querySelectorAll('.contact-item').forEach(item => {
+      elements.contactsList.querySelectorAll('.contact-item').forEach(item => {
         item.addEventListener('click', () => {
           const id = parseInt(item.dataset.id);
           const contact = this.state.contacts.find(c => c.id === id);
@@ -421,14 +398,36 @@ export class UIManager {
 
     // ---- Sidebar Toggle (mobile) ----
     openSidebar() {
-      this.sidebar.classList.add('open');
-      this.sidebarOvl.classList.add('active');
+      elements.sidebar.classList.add('open');
+      elements.sidebarOvl.classList.add('active');
     }
 
     closeSidebar() {
-      this.sidebar.classList.remove('open');
-      this.sidebarOvl.classList.remove('active');
+      elements.sidebar.classList.remove('open');
+      elements.sidebarOvl.classList.remove('active');
     }
+
+
+    /*
+     *
+    searchInput: document.getElementById('search-input'),
+    idleScreen: document.getElementById('idle-screen'),
+    callingScr: document.getElementById('calling-screen'),
+    callScreen: document.getElementById('call-screen'),
+    callingAvatar: document.getElementById('calling-avatar'),
+    callingName: document.getElementById('calling-name'),
+    remoteArea: document.getElementById('remote-area'),
+    localVideo: document.getElementById('local-video'),
+    pipWrap: document.getElementById('pip-wrap'),
+    pipNoCam: document.getElementById('pip-no-cam'),
+    infoName: document.getElementById('info-name'),
+    infoTimer: document.getElementById('info-timer'),
+    incomingEl: document.getElementById('incoming-call'),
+    incAvatar: document.getElementById('inc-avatar'),
+    incName: document.getElementById('inc-name'),
+    settingsPanel: document.getElementById('settings-panel'),
+    addModal: document.getElementById('add-modal'),
+    */
 
 
     // ---- Settings ----
@@ -499,5 +498,64 @@ export class UIManager {
             e.preventDefault();
             onDecline();
         });
+
+    // TODO: this.sidebarOvl and all the old stuff that used this.sidebar, this.contacts, etc needs to be moved
+    // to using elements.sidebar and elements.contacts.
+
+    // You also need ot change the notation from $("#whatever") to adding ALL those classes to elements, and then
+    // replacing those with elements."whatever"
+
+    // Mobile menu
+    elements.menu.addEventListener('click',this.openSidebar);
+    sidebarOvl.addEventListener('click', closeSidebar);
+
+    // Search
+    searchInput.addEventListener('input', () => renderContacts(searchInput.value));
+
+    // Add contact
+    $('#add-btn').addEventListener('click', openAddModal);
+    $('#modal-cancel').addEventListener('click', closeAddModal);
+    $('#modal-confirm').addEventListener('click', addContact);
+    $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
+    $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
+    addModal.addEventListener('click', (e) => { if (e.target === addModal) closeAddModal(); });
+
+    // Settings
+    $('#settings-btn').addEventListener('click', openSettings);
+    $('#mobile-settings-btn').addEventListener('click', openSettings);
+    $('#close-settings').addEventListener('click', closeSettings);
+    $('#ctrl-settings').addEventListener('click', openSettings);
+    settingsPanel.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
+
+    // Mirror toggle
+    $('#toggle-mirror').addEventListener('click', function() {
+      state.isMirrored = !state.isMirrored;
+      this.classList.toggle('on', state.isMirrored);
+      localVideo.classList.toggle('no-mirror', !state.isMirrored);
+    });
+
+    // Camera select change
+    $('#sel-camera').addEventListener('change', function() {
+      changeCamera(this.value);
+    });
+
+    // Audio output change
+    $('#sel-speaker').addEventListener('change', function() {
+      if (localVideo.setSinkId) {
+        localVideo.setSinkId(this.value).catch(() => {});
+      }
+    });
+
+    // Call controls
+    $('#ctrl-mute').addEventListener('click', toggleMute);
+    $('#ctrl-cam').addEventListener('click', toggleCamera);
+    $('#ctrl-flip').addEventListener('click', flipCamera);
+    $('#ctrl-end').addEventListener('click', endCall);
+    $('#cancel-call-btn').addEventListener('click', cancelCall);
+
+    // Incoming call
+    $('#sim-btn').addEventListener('click', simulateIncoming);
+    $('#inc-accept').addEventListener('click', acceptIncoming);
+    $('#inc-decline').addEventListener('click', declineIncoming);
     }
 }

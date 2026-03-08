@@ -21,18 +21,19 @@ from websockets.exceptions import ConnectionClosed
 
 SERVER_BASE = "localhost"
 SERVER_PORT = 8765
-CONNECTIONS = {}
+# dict mapping websocket connections to connection IDs
+CONNECTIONS = {}       
 
-async def message_user(user_id, message):
+async def message_user(connection_id, message):
     try:
-        websocket = CONNECTIONS[user_id]  # raises KeyError if user disconnected
+        websocket = CONNECTIONS[connection_id]  # raises KeyError if user disconnected
         await websocket.send(json.dumps(message))  # may raise websockets.exceptions.ConnectionClosed
     except KeyError as k:
-        print(f"We had a key error: {k}")
+        print(f"Had an error which caused the user to disconnect: {k}")
     except ConnectionClosed as cc:
         print(f"Connection closed error: {cc}")
     except Exception as e:
-        print(f"Exception occured: {e}")
+        print(f"Exception occured in message_user: {e}")
 
 async def handler(websocket):
     id = uuid.uuid4()
@@ -42,18 +43,23 @@ async def handler(websocket):
             event = json.loads(message)
             match event["state"]:
                 # When client initially connects, generate
-                # a user ID for them and save it
+                # a connection ID for them and save it
                 case "init":
                     print(f"Initializing connection with id: {id}")
-                    await websocket.send(json.dumps({
-                        "state" : "addUserId",
+
+                    # Sending over the connection id to the new user
+                    send_to_user = {
+                        "state" : "addConnectionId",
                         "data" : {
-                            "userID" : str(id)
+                            "connectionID" : str(id)
                         },
-                    }))
+                    }
+                    await websocket.send(json.dumps(send_to_user))
                 case "sendOffer":
+                    # Start a call with another user
                     print(f"Offer sent: {event}")
                     data = event["data"]
+
                     send_to_user = {
                         "state": "pendingOffer",
                         "data": {
@@ -63,6 +69,7 @@ async def handler(websocket):
                     }
                     await message_user(data["receiverID"], send_to_user)
                 case "sendAnswer":
+                    # Accept a call from another user
                     print(event)
                     data = event["data"]
                     sent_to_user = {
@@ -73,6 +80,12 @@ async def handler(websocket):
                     }
                     await message_user(data["to"], sent_to_user)
                 case "sendIceCandidate":
+                    # After SDP connection stuff happens, the media that's being sent
+                    # is accepted. However, that doesn't guarantee bidrectional 
+                    # communication can actually occur. To overcome that, we use 
+                    # ICE Candidates. It basically just tests a whole bunch of
+                    # different ways to try and establish this connection, and 
+                    # finishes up when a working version has been found. 
                     data = event["data"]
                     await message_user(data["to"], {
                         "state": "receiveIceCandidate",

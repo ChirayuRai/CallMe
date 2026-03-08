@@ -51,8 +51,8 @@ class VideoCallApp {
 
     async handleWebSocketMessage(event) {
         switch (event.state) {
-            case "addUserId":
-                this.uiManager.setUserId(event.data.userID);
+            case "addConnectionId":
+                this.uiManager.setConnectionId(event.data.connectionID);
                 break;
 
             case "pendingOffer":
@@ -85,7 +85,7 @@ class VideoCallApp {
         try {
             const offer = await this.peerConnectionManager.createOffer();
             this.websocketManager.sendOffer(
-                this.uiManager.getUserId(),
+                this.uiManager.getConnectionId(),
                 this.uiManager.getCallInputValue(),
                 offer
             );
