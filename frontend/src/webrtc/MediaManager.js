@@ -13,7 +13,8 @@ export class MediaManager {
             console.log("Media access granted");
             
             elements.localVideoFullscreen.srcObject = this.localStream;
-            elements.localVideoDiv.classList.remove('hidden');
+            elements.mainIdleIn.classList.add('hidden');
+            elements.localVideoFullscreen.classList.remove('hidden');
             
             return this.localStream;
         } catch (error) {
@@ -22,6 +23,7 @@ export class MediaManager {
         }
     }
 
+    // TODO: Fix this entire thing because it has now been broken by Vercel :)
     setRemoteStream(remoteStream) {
         elements.remoteVideo.srcObject = remoteStream;
         elements.localVideoPip.srcObject = this.localStream;

@@ -1,5 +1,5 @@
 import { elements } from './elements.js';
-import { ICONS } from '../config/constants.js';
+import { ICONS, AVATAR_COLORS } from '../config/constants.js';
 
 export class UIManager {
     constructor() {
@@ -31,9 +31,9 @@ export class UIManager {
 
     }
 
-    setUserId(userId) {
-        this.state.userID = userId;
-        elements.idText.textContent = userId;
+    setConnectionId(connectionID) {
+        this.state.connectionID = connectionID;
+        // elements.idText.textContent = connectionID;
     }
 
     getUserId() {
@@ -213,8 +213,8 @@ export class UIManager {
           audio: true
         };
         this.state.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-        this.localVideo.srcObject = state.localStream;
-        this.localVideo.classList.toggle('no-mirror', !state.isMirrored);
+        this.localVideo.srcObject = this.state.localStream;
+        this.localVideo.classList.toggle('no-mirror', !this.state.isMirrored);
         this.pipWrap.classList.remove('hidden');
         this.pipNoCam.classList.add('hidden');
         this.localVideo.classList.remove('hidden');
@@ -228,6 +228,7 @@ export class UIManager {
         // Camera access denied or unavailable
         this.localVideo.classList.add('hidden');
         this.pipNoCam.classList.remove('hidden');
+        console.error("Error loading in camera", err);
       }
     }
 
@@ -484,20 +485,21 @@ export class UIManager {
     }
 
     setupEventListeners(onCall, onAccept, onDecline) {
-        elements.callButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            onCall();
-        });
 
-        elements.incomingCallAcceptButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            onAccept();
-        });
-
-        elements.incomingCallDeclineButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            onDecline();
-        });
+        // elements.callButton.addEventListener("click", (e) => {
+        //     e.preventDefault();
+        //     onCall();
+        // });
+        //
+        // elements.incomingCallAcceptButton.addEventListener("click", (e) => {
+        //     e.preventDefault();
+        //     onAccept();
+        // });
+        //
+        // elements.incomingCallDeclineButton.addEventListener("click", (e) => {
+        //     e.preventDefault();
+        //     onDecline();
+        // });
 
     // TODO: this.sidebarOvl and all the old stuff that used this.sidebar, this.contacts, etc needs to be moved
     // to using elements.sidebar and elements.contacts.
@@ -507,55 +509,74 @@ export class UIManager {
 
     // Mobile menu
     elements.menu.addEventListener('click',this.openSidebar);
-    sidebarOvl.addEventListener('click', closeSidebar);
+    elements.sidebarOvl.addEventListener('click', this.closeSidebar);
 
     // Search
-    searchInput.addEventListener('input', () => renderContacts(searchInput.value));
+    elements.searchInput.addEventListener('input', () => this.renderContacts(elements.searchInput.value));
 
     // Add contact
-    $('#add-btn').addEventListener('click', openAddModal);
-    $('#modal-cancel').addEventListener('click', closeAddModal);
-    $('#modal-confirm').addEventListener('click', addContact);
-    $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
-    $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
-    addModal.addEventListener('click', (e) => { if (e.target === addModal) closeAddModal(); });
+   //  $('#add-btn').addEventListener('click', this.openAddModal);
+   //  $('#modal-cancel').addEventListener('click', this.closeAddModal);
+   //  $('#modal-confirm').addEventListener('click', this.addContact);
+   //  $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
+   //  $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') this.addContact(); });
+   //  elements.addModal.addEventListener('click', (e) => { if (e.target === elements.addModal) this.closeAddModal(); });
+   //
+   //  // Settings
+   //  $('#settings-btn').addEventListener('click', this.openSettings);
+   //  $('#mobile-settings-btn').addEventListener('click', this.openSettings);
+   //  $('#close-settings').addEventListener('click', this.closeSettings);
+   //  $('#ctrl-settings').addEventListener('click', this.openSettings);
+   //  elements.settingsPanel.addEventListener('click', (e) => { if (e.target === elements.settingsPanel) this.closeSettings(); });
+   //
+   //  // Mirror toggle
+   //  $('#toggle-mirror').addEventListener('click', function() {
+   //    this.state.isMirrored = !this.state.isMirrored;
+   //    this.classList.toggle('on', this.state.isMirrored);
+   //    elements.localVideo.classList.toggle('no-mirror', !this.state.isMirrored);
+   //  });
+   //
+   //  // Camera select change
+   //  $('#sel-camera').addEventListener('change', function() {
+   //    this.changeCamera(this.value);
+   //  });
+   //
+   //  // Audio output change
+   //  $('#sel-speaker').addEventListener('change', function() {
+   //    if (elements.localVideo.setSinkId) {
+   //      elements.localVideo.setSinkId(this.value).catch(() => {});
+   //    }
+   //  });
+   //
+   //  // Call controls
+   //  $('#ctrl-mute').addEventListener('click', this.toggleMute);
+   //  $('#ctrl-cam').addEventListener('click', this.toggleCamera);
+   //  $('#ctrl-flip').addEventListener('click', this.flipCamera);
+   //  $('#ctrl-end').addEventListener('click', this.endCall);
+   //  $('#cancel-call-btn').addEventListener('click', this.cancelCall);
+   //
+   //  // Incoming call
+   //  $('#sim-btn').addEventListener('click', this.simulateIncoming);
+   //  $('#inc-accept').addEventListener('click', this.acceptIncoming);
+   //  $('#inc-decline').addEventListener('click', this.declineIncoming);
+   //
+   // // Keyboard shortcuts
+   //  document.addEventListener('keydown', (e) => {
+   //    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+   //    if (e.key === 'Escape') {
+   //      if (elements.addModal.classList.contains('show')) this.closeAddModal();
+   //      else if (elements.settingsPanel.classList.contains('show')) this.closeSettings();
+   //      else if (elements.incomingEl.classList.contains('show')) this.declineIncoming();
+   //      else if (this.state.screen === 'calling') this.cancelCall();
+   //    }
+   //    if (e.key === 'm' && this.state.screen === 'incall') this.toggleMute();
+   //    if (e.key === 'v' && this.state.screen === 'incall') this.toggleCamera();
+   //  });
 
-    // Settings
-    $('#settings-btn').addEventListener('click', openSettings);
-    $('#mobile-settings-btn').addEventListener('click', openSettings);
-    $('#close-settings').addEventListener('click', closeSettings);
-    $('#ctrl-settings').addEventListener('click', openSettings);
-    settingsPanel.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
+    }
 
-    // Mirror toggle
-    $('#toggle-mirror').addEventListener('click', function() {
-      state.isMirrored = !state.isMirrored;
-      this.classList.toggle('on', state.isMirrored);
-      localVideo.classList.toggle('no-mirror', !state.isMirrored);
-    });
-
-    // Camera select change
-    $('#sel-camera').addEventListener('change', function() {
-      changeCamera(this.value);
-    });
-
-    // Audio output change
-    $('#sel-speaker').addEventListener('change', function() {
-      if (localVideo.setSinkId) {
-        localVideo.setSinkId(this.value).catch(() => {});
-      }
-    });
-
-    // Call controls
-    $('#ctrl-mute').addEventListener('click', toggleMute);
-    $('#ctrl-cam').addEventListener('click', toggleCamera);
-    $('#ctrl-flip').addEventListener('click', flipCamera);
-    $('#ctrl-end').addEventListener('click', endCall);
-    $('#cancel-call-btn').addEventListener('click', cancelCall);
-
-    // Incoming call
-    $('#sim-btn').addEventListener('click', simulateIncoming);
-    $('#inc-accept').addEventListener('click', acceptIncoming);
-    $('#inc-decline').addEventListener('click', declineIncoming);
+    init() {
+      this.renderContacts();
+      // this.updateControlIcons();
     }
 }

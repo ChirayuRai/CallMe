@@ -6,9 +6,9 @@ export const elements = {
     incomingCallText: document.getElementById("incomingCaller"),
     incomingCallAcceptButton: document.getElementById("acceptCall"),
     incomingCallDeclineButton: document.getElementById("declineCall"),
-    localVideoFullscreen: document.getElementById("localVideoFullscreen"),
+    localVideoFullscreen: document.getElementById("local-video-idle"),
     localVideoDiv: document.getElementById("localVideoOnly"),
-    localVideoPip: document.getElementById("localVideoPip"),
+    localVideoPip: document.getElementById("local-video-pip"),
     localAndRemoteVideoDiv: document.getElementById("localAndRemoteVideo"),
     remoteVideo: document.getElementById("remoteVideo"),
     menu: document.getElementById('menu-btn'),
@@ -43,4 +43,5 @@ export const elements = {
     incName      : document.getElementById('inc-name'),
     settingsPanel: document.getElementById('settings-panel'),
     addModal     : document.getElementById('add-modal'),
+    mainIdleIn   : document.getElementById('idle-inner'),
 };

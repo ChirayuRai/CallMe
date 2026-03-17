@@ -38,6 +38,9 @@ class VideoCallApp {
             () => this.handleAcceptCall(),
             () => this.handleDeclineCall()
         );
+
+        // Initialize other important methods in UI Manager
+        this.uiManager.init();
     }
 
     handleIceCandidate(candidate) {

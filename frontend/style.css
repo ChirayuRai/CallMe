@@ -330,7 +330,7 @@ input, select { font-family: inherit; }
   text-align: center;
 }
 
-.idle-inner {
+#idle-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -519,7 +519,15 @@ input, select { font-family: inherit; }
 #pip-wrap:hover { box-shadow: 0 10px 40px rgba(0,0,0,0.65); }
 #pip-wrap.dragging { cursor: grabbing; box-shadow: 0 14px 48px rgba(0,0,0,0.7); }
 
-#local-video {
+#local-video-idle {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  display: block;
+}
+
+#local-video-pip {
   width: 100%;
   height: 100%;
   object-fit: cover;

@@ -52,13 +52,14 @@
     <main id="main-content">
       <!-- Idle -->
       <div id="idle-screen">
-        <div class="idle-inner">
+        <div id="idle-inner">
           <div class="idle-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 2 5 5-5 5"/><path d="M21 7H9"/><path d="m8 22-5-5 5-5"/><path d="M3 17h12"/></svg>
           </div>
           <h2>FaceTime</h2>
           <p>Select a contact from the sidebar to start a video call</p>
         </div>
+      <video id="local-video-idle" autoplay playsinline muted class="hidden"></video>
       </div>
 
       <!-- Calling -->
@@ -80,7 +81,7 @@
       <div id="call-screen" class="hidden">
         <div id="remote-area"></div>
         <div id="pip-wrap">
-          <video id="local-video" autoplay playsinline muted></video>
+          <video id="local-video-pip" autoplay playsinline muted></video>
           <div class="pip-no-cam hidden" id="pip-no-cam">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 3H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
           </div>
@@ -166,80 +167,6 @@
       </div>
     </div>
   </div>
-
-  <script>
-
-    // ---- Event Listeners ----
-
-    // Mobile menu
-    $('#menu-btn').addEventListener('click', openSidebar);
-    sidebarOvl.addEventListener('click', closeSidebar);
-
-    // Search
-    searchInput.addEventListener('input', () => renderContacts(searchInput.value));
-
-    // Add contact
-    $('#add-btn').addEventListener('click', openAddModal);
-    $('#modal-cancel').addEventListener('click', closeAddModal);
-    $('#modal-confirm').addEventListener('click', addContact);
-    $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
-    $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') addContact(); });
-    addModal.addEventListener('click', (e) => { if (e.target === addModal) closeAddModal(); });
-
-    // Settings
-    $('#settings-btn').addEventListener('click', openSettings);
-    $('#mobile-settings-btn').addEventListener('click', openSettings);
-    $('#close-settings').addEventListener('click', closeSettings);
-    $('#ctrl-settings').addEventListener('click', openSettings);
-    settingsPanel.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
-
-    // Mirror toggle
-    $('#toggle-mirror').addEventListener('click', function() {
-      state.isMirrored = !state.isMirrored;
-      this.classList.toggle('on', state.isMirrored);
-      localVideo.classList.toggle('no-mirror', !state.isMirrored);
-    });
-
-    // Camera select change
-    $('#sel-camera').addEventListener('change', function() {
-      changeCamera(this.value);
-    });
-
-    // Audio output change
-    $('#sel-speaker').addEventListener('change', function() {
-      if (localVideo.setSinkId) {
-        localVideo.setSinkId(this.value).catch(() => {});
-      }
-    });
-
-    // Call controls
-    $('#ctrl-mute').addEventListener('click', toggleMute);
-    $('#ctrl-cam').addEventListener('click', toggleCamera);
-    $('#ctrl-flip').addEventListener('click', flipCamera);
-    $('#ctrl-end').addEventListener('click', endCall);
-    $('#cancel-call-btn').addEventListener('click', cancelCall);
-
-    // Incoming call
-    $('#sim-btn').addEventListener('click', simulateIncoming);
-    $('#inc-accept').addEventListener('click', acceptIncoming);
-    $('#inc-decline').addEventListener('click', declineIncoming);
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      if (e.key === 'Escape') {
-        if (addModal.classList.contains('show')) closeAddModal();
-        else if (settingsPanel.classList.contains('show')) closeSettings();
-        else if (incomingEl.classList.contains('show')) declineIncoming();
-        else if (state.screen === 'calling') cancelCall();
-      }
-      if (e.key === 'm' && state.screen === 'incall') toggleMute();
-      if (e.key === 'v' && state.screen === 'incall') toggleCamera();
-    });
-
-    // ---- Init ----
-    renderContacts();
-    updateControlIcons();
-  </script>
+<script type="module" src="src/main.js"></script>
 </body>
 </html>

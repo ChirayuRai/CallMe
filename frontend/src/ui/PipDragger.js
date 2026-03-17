@@ -26,7 +26,7 @@ class PipDragger {
         this.isDragging = true;
         this.pipWrap.classList.add('dragging');
         const touch = e.touches ? e.touches[0] : e;
-        const rect = pipWrap.getBoundingClientRect();
+        const rect = this.pipWrap.getBoundingClientRect();
         this.startX = touch.clientX;
         this.startY = touch.clientY;
         this.origX = rect.left;
@@ -38,10 +38,10 @@ class PipDragger {
     onMove(e) {
         if (!this.isDragging) return;
         const touch = e.touches ? e.touches[0] : e;
-        const dx = touch.clientX - startX;
-        const dy = touch.clientY - startY;
-        let newX = origX + dx;
-        let newY = origY + dy;
+        const dx = touch.clientX - this.startX;
+        const dy = touch.clientY - this.startY;
+        let newX = this.origX + dx;
+        let newY = this.origY + dy;
 
         // Get bounds from call-screen (the parent)
         const parent = this.callScreen.getBoundingClientRect();
@@ -63,14 +63,14 @@ class PipDragger {
         this.pipWrap.classList.remove('dragging');
 
         // Snap to nearest corner
-        const parent = callScreen.getBoundingClientRect();
-        const rect = pipWrap.getBoundingClientRect();
+        const parent = this.callScreen.getBoundingClientRect();
+        const rect = this.pipWrap.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         const midX = parent.left + parent.width / 2;
         const midY = parent.top + parent.height / 2;
-        const pad = isMobile() ? 12 : 20;
-        const topPad = isMobile() ? 72 : 20;
+        const pad = this.isMobile() ? 12 : 20;
+        const topPad = this.isMobile() ? 72 : 20;
 
         let targetX, targetY;
         if (cx < midX) {
@@ -93,10 +93,10 @@ class PipDragger {
     setupEventListeners() {
         this.pipWrap.addEventListener('mousedown', this.onStart);
         this.pipWrap.addEventListener('touchstart', this.onStart, { passive: false });
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('touchmove', onMove, { passive: false });
-        document.addEventListener('mouseup', onEnd);
-        document.addEventListener('touchend', onEnd);
+        document.addEventListener('mousemove', this.onMove);
+        document.addEventListener('touchmove', this.onMove, { passive: false });
+        document.addEventListener('mouseup', this.onEnd);
+        document.addEventListener('touchend', this.onEnd);
     }
 
 
