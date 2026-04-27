@@ -1,5 +1,6 @@
 import { elements } from './elements.js';
 import { ICONS, AVATAR_COLORS } from '../config/constants.js';
+import { PipDragger } from "./PipDragger.js";
 
 export class UIManager {
     constructor() {
@@ -33,7 +34,6 @@ export class UIManager {
 
     setConnectionId(connectionID) {
         this.state.connectionID = connectionID;
-        // elements.idText.textContent = connectionID;
     }
 
     getUserId() {
@@ -90,6 +90,7 @@ export class UIManager {
       // Attach click handlers
       elements.contactsList.querySelectorAll('.contact-call').forEach(btn => {
         btn.addEventListener('click', (e) => {
+          console.log("We have clicked this contact:", e)
           e.stopPropagation();
           const id = parseInt(btn.dataset.call);
           const contact = this.state.contacts.find(c => c.id === id);
@@ -134,9 +135,9 @@ export class UIManager {
     // ---- Screen Management ----
     showScreen(name) {
       this.state.screen = name;
-      this.idleScreen.classList.toggle('hidden', name !== 'idle');
-      this.callingScr.classList.toggle('hidden', name !== 'calling');
-      this.callScreen.classList.toggle('hidden', name !== 'incall');
+      elements.idleScreen.classList.toggle('hidden', name !== 'idle');
+      elements.callingScr.classList.toggle('hidden', name !== 'calling');
+      elements.callScreen.classList.toggle('hidden', name !== 'incall');
     }
 
 
@@ -150,16 +151,16 @@ export class UIManager {
       if (this.isMobile()) this.closeSidebar();
 
       // Set calling screen info
-      this.callingAvatar.textContent = this.getInitials(contact.name);
-      this.callingAvatar.style.background = this.getColor(contact.name);
-      this.callingName.textContent = contact.name;
+      elements.callingAvatar.textContent = this.getInitials(contact.name);
+      elements.callingAvatar.style.background = this.getColor(contact.name);
+      elements.callingName.textContent = contact.name;
 
       // Simulate ringing for 3 seconds then connect
       setTimeout(() => {
         if (this.state.screen === 'calling' && this.state.activeContact === contact) {
           this.connectCall(contact);
         }
-      }, 3000);
+      }, 1000);
     }
 
     async connectCall(contact) {
@@ -167,20 +168,20 @@ export class UIManager {
 
       // Remote area (simulated)
       const color = this.getColor(contact.name);
-      this.remoteArea.innerHTML =
+      elements.remoteArea.innerHTML =
         '<div class="remote-fallback">' +
           '<div class="big-avatar" style="background:' + color + '">' + this.getInitials(contact.name) + '</div>' +
           '<div class="remote-label">' + contact.name + '</div>' +
         '</div>';
 
-      this.infoName.textContent = contact.name;
+      elements.infoName.textContent = contact.name;
       this.state.callSeconds = 0;
-      this.infoTimer.textContent = '00:00';
+      elements.infoTimer.textContent = '00:00';
 
       // Start timer
       this.state.callTimer = setInterval(() => {
         this.state.callSeconds++;
-        this.infoTimer.textContent = this.formatTime(this.state.callSeconds);
+        elements.infoTimer.textContent = this.formatTime(this.state.callSeconds);
       }, 1000);
 
       // Reset control states
@@ -190,12 +191,16 @@ export class UIManager {
 
       // Start local camera
       await this.startLocalCamera();
+      elements.localVideoPip.srcObject = this.state.localStream;
     }
 
     endCall() {
+      console.log("Clearing Timer state")
       if (this.state.callTimer) { clearInterval(this.state.callTimer); this.state.callTimer = null; }
-      this.stopLocalCamera();
+      // this.stopLocalCamera();
+      console.log("Clearing active contact state")
       this.state.activeContact = null;
+      console.log("Switching to idle screen")
       this.showScreen('idle');
     }
 
@@ -213,11 +218,11 @@ export class UIManager {
           audio: true
         };
         this.state.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-        this.localVideo.srcObject = this.state.localStream;
-        this.localVideo.classList.toggle('no-mirror', !this.state.isMirrored);
-        this.pipWrap.classList.remove('hidden');
-        this.pipNoCam.classList.add('hidden');
-        this.localVideo.classList.remove('hidden');
+        elements.localVideoFullscreen.srcObject = this.state.localStream;
+        elements.localVideoFullscreen.classList.toggle('no-mirror', !this.state.isMirrored);
+        elements.pipWrap.classList.remove('hidden');
+        elements.pipNoCam.classList.add('hidden');
+        elements.localVideoFullscreen.classList.remove('hidden');
 
         // Mute audio track if user had muted
         this.state.localStream.getAudioTracks().forEach(t => t.enabled = !this.state.isMuted);
@@ -226,8 +231,8 @@ export class UIManager {
         this.enumerateDevices();
       } catch (err) {
         // Camera access denied or unavailable
-        this.localVideo.classList.add('hidden');
-        this.pipNoCam.classList.remove('hidden');
+        elements.localVideoFullscreen.classList.add('hidden');
+        elements.pipNoCam.classList.remove('hidden');
         console.error("Error loading in camera", err);
       }
     }
@@ -237,7 +242,6 @@ export class UIManager {
         this.state.localStream.getTracks().forEach(t => t.stop());
         this.state.localStream = null;
       }
-      this.localVideo.srcObject = null;
     }
 
     toggleMute() {
@@ -272,8 +276,8 @@ export class UIManager {
     }
 
     updateControlIcons() {
-      const muteBtn = this.$('#ctrl-mute');
-      const camBtn = this.$('#ctrl-cam');
+      const muteBtn = elements.controlMute;
+      const camBtn = elements.controlCam;
 
       // Update mute button
       const muteLabel = muteBtn.querySelector('.ctrl-label');
@@ -299,9 +303,9 @@ export class UIManager {
     async enumerateDevices() {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const camSel = this.$('#sel-camera');
-        const micSel = this.$('#sel-mic');
-        const spkSel = this.$('#sel-speaker');
+        const camSel = elements.selectCamera;
+        const micSel = elements.selectMic;
+        const spkSel = elements.selectSpeaker;
 
         camSel.innerHTML = '';
         micSel.innerHTML = '';
@@ -361,22 +365,22 @@ export class UIManager {
 
     // ---- Incoming Call ----
     //TODO: Use this when a call is actually incoming
-    simulateIncoming() {
-      // Pick a random contact that isn't the active one
-      const pool = this.state.contacts.filter(c => c !== this.state.activeContact);
-      if (pool.length === 0) return;
-      const contact = pool[Math.floor(Math.random() * pool.length)];
-      this.state.incomingContact = contact;
-
-      this.incAvatar.textContent = this.getInitials(contact.name);
-      this.incAvatar.style.background = this.getColor(contact.name);
-      this.incName.textContent = contact.name;
-
-      this.incomingEl.classList.add('show');
-    }
-
+    // simulateIncoming() {
+    //   // Pick a random contact that isn't the active one
+    //   const pool = this.state.contacts.filter(c => c !== this.state.activeContact);
+    //   if (pool.length === 0) return;
+    //   const contact = pool[Math.floor(Math.random() * pool.length)];
+    //   this.state.incomingContact = contact;
+    //
+    //   this.incAvatar.textContent = this.getInitials(contact.name);
+    //   this.incAvatar.style.background = this.getColor(contact.name);
+    //   this.incName.textContent = contact.name;
+    //
+    //   this.incomingEl.classList.add('show');
+    // }
+    //
     acceptIncoming() {
-      this.incomingEl.classList.remove('show');
+      elements.incomingEl.classList.remove('show');
       const contact = this.state.incomingContact;
       this.state.incomingContact = null;
 
@@ -392,8 +396,9 @@ export class UIManager {
     }
 
     declineIncoming() {
-      this.incomingEl.classList.remove('show');
+      console.log("Decline Incoming call was called");
       this.state.incomingContact = null;
+      this.showScreen('idle');
     }
 
 
@@ -434,28 +439,28 @@ export class UIManager {
     // ---- Settings ----
     openSettings() {
       this.enumerateDevices();
-      this.settingsPanel.classList.add('show');
+      elements.settingsPanel.classList.add('show');
     }
 
     closeSettings() {
-      this.settingsPanel.classList.remove('show');
+      elements.settingsPanel.classList.remove('show');
     }
 
     // ---- Add Contact ----
     openAddModal() {
-      this.$('#inp-name').value = '';
-      this.$('#inp-detail').value = '';
-      this.addModal.classList.add('show');
-      setTimeout(() => this.$('#inp-name').focus(), 100);
+      elements.nameInput.value = '';
+      elements.detailInput.value = '';
+      elements.addModal.classList.add('show');
+      setTimeout(() => elements.nameInput.focus(), 100);
     }
 
     closeAddModal() {
-      this.addModal.classList.remove('show');
+      elements.addModal.classList.remove('show');
     }
 
     addContact() {
-      const name = this.$('#inp-name').value.trim();
-      const detail = this.$('#inp-detail').value.trim();
+      const name = elements.nameInput.value.trim();
+      const detail = elements.detailInput.value.trim();
       if (!name) return;
       this.state.contacts.push({
         id: this.state.nextId++,
@@ -464,7 +469,7 @@ export class UIManager {
         online: Math.random() > 0.5
       });
       this.closeAddModal();
-      this.renderContacts(this.searchInput.value);
+      this.renderContacts();
     }
 
 
@@ -481,10 +486,10 @@ export class UIManager {
         document.getElementById('ctrl-settings').insertAdjacentHTML('afterbegin', ICONS.settings),
         document.getElementById('inc-decline').innerHTML = ICONS.phone;
         document.getElementById('inc-accept').innerHTML = ICONS.video;
-        document.getElementById('close-settings').innerHTML = ICONS.clos;
+        document.getElementById('close-settings').innerHTML = ICONS.close;
     }
 
-    setupEventListeners(onCall, onAccept, onDecline) {
+    async setupEventListeners(onCall, onAccept, onDecline) {
 
         // elements.callButton.addEventListener("click", (e) => {
         //     e.preventDefault();
@@ -501,82 +506,81 @@ export class UIManager {
         //     onDecline();
         // });
 
-    // TODO: this.sidebarOvl and all the old stuff that used this.sidebar, this.contacts, etc needs to be moved
-    // to using elements.sidebar and elements.contacts.
-
-    // You also need ot change the notation from $("#whatever") to adding ALL those classes to elements, and then
-    // replacing those with elements."whatever"
-
     // Mobile menu
-    elements.menu.addEventListener('click',this.openSidebar);
-    elements.sidebarOvl.addEventListener('click', this.closeSidebar);
+    elements.menu.addEventListener('click',() => this.openSidebar());
+    elements.sidebarOvl.addEventListener('click', () => this.closeSidebar());
 
     // Search
     elements.searchInput.addEventListener('input', () => this.renderContacts(elements.searchInput.value));
 
     // Add contact
-   //  $('#add-btn').addEventListener('click', this.openAddModal);
-   //  $('#modal-cancel').addEventListener('click', this.closeAddModal);
-   //  $('#modal-confirm').addEventListener('click', this.addContact);
-   //  $('#inp-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
-   //  $('#inp-detail').addEventListener('keydown', (e) => { if (e.key === 'Enter') this.addContact(); });
-   //  elements.addModal.addEventListener('click', (e) => { if (e.target === elements.addModal) this.closeAddModal(); });
-   //
+    elements.addButton.addEventListener('click', () => this.openAddModal());
+    elements.cancelModal.addEventListener('click', () => this.closeAddModal());
+    elements.confirmModal.addEventListener('click', () => this.addContact());
+    elements.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
+    elements.detailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.addContact(); });
+    elements.addModal.addEventListener('click', (e) => { if (e.target === elements.addModal) this.closeAddModal(); });
+
    //  // Settings
-   //  $('#settings-btn').addEventListener('click', this.openSettings);
-   //  $('#mobile-settings-btn').addEventListener('click', this.openSettings);
-   //  $('#close-settings').addEventListener('click', this.closeSettings);
-   //  $('#ctrl-settings').addEventListener('click', this.openSettings);
-   //  elements.settingsPanel.addEventListener('click', (e) => { if (e.target === elements.settingsPanel) this.closeSettings(); });
-   //
-   //  // Mirror toggle
-   //  $('#toggle-mirror').addEventListener('click', function() {
-   //    this.state.isMirrored = !this.state.isMirrored;
-   //    this.classList.toggle('on', this.state.isMirrored);
-   //    elements.localVideo.classList.toggle('no-mirror', !this.state.isMirrored);
-   //  });
-   //
-   //  // Camera select change
-   //  $('#sel-camera').addEventListener('change', function() {
-   //    this.changeCamera(this.value);
-   //  });
-   //
-   //  // Audio output change
-   //  $('#sel-speaker').addEventListener('change', function() {
-   //    if (elements.localVideo.setSinkId) {
-   //      elements.localVideo.setSinkId(this.value).catch(() => {});
-   //    }
-   //  });
-   //
-   //  // Call controls
-   //  $('#ctrl-mute').addEventListener('click', this.toggleMute);
-   //  $('#ctrl-cam').addEventListener('click', this.toggleCamera);
-   //  $('#ctrl-flip').addEventListener('click', this.flipCamera);
-   //  $('#ctrl-end').addEventListener('click', this.endCall);
-   //  $('#cancel-call-btn').addEventListener('click', this.cancelCall);
-   //
-   //  // Incoming call
-   //  $('#sim-btn').addEventListener('click', this.simulateIncoming);
-   //  $('#inc-accept').addEventListener('click', this.acceptIncoming);
-   //  $('#inc-decline').addEventListener('click', this.declineIncoming);
-   //
-   // // Keyboard shortcuts
-   //  document.addEventListener('keydown', (e) => {
-   //    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-   //    if (e.key === 'Escape') {
-   //      if (elements.addModal.classList.contains('show')) this.closeAddModal();
-   //      else if (elements.settingsPanel.classList.contains('show')) this.closeSettings();
-   //      else if (elements.incomingEl.classList.contains('show')) this.declineIncoming();
-   //      else if (this.state.screen === 'calling') this.cancelCall();
-   //    }
-   //    if (e.key === 'm' && this.state.screen === 'incall') this.toggleMute();
-   //    if (e.key === 'v' && this.state.screen === 'incall') this.toggleCamera();
-   //  });
+    elements.settingsButton.addEventListener('click', () => this.openSettings());
+    elements.mobileSettingsButton.addEventListener('click', () => this.openSettings());
+    elements.closeSettings.addEventListener('click', () => this.closeSettings());
+    elements.controlSettings.addEventListener('click', () => this.openSettings());
+    elements.settingsPanel.addEventListener('click', (e) => { if (e.target === elements.settingsPanel) this.closeSettings(); });
+
+    //NOTE: Check if this needs to be modified with local video pip or some shit
+    // Mirror toggle
+    elements.toggleMirror.addEventListener('click', function() {
+      this.state.isMirrored = !this.state.isMirrored;
+      this.classList.toggle('on', this.state.isMirrored);
+      elements.localVideo.classList.toggle('no-mirror', !this.state.isMirrored);
+    });
+        
+    // Camera select change
+    elements.selectCamera.addEventListener('change', async () => await this.changeCamera(this.value));
+
+    // Audio output change
+    elements.selectSpeaker.addEventListener('change', function() {
+      if (elements.localVideo.setSinkId) {
+        elements.localVideo.setSinkId(this.value).catch(() => {});
+      }
+    });
+
+    // Call controls
+    elements.controlMute.addEventListener('click', () => this.toggleMute());
+    elements.controlCam.addEventListener('click', () => this.toggleCamera());
+    elements.controlFlip.addEventListener('click', () => this.flipCamera());
+    elements.controlEnd.addEventListener('click', () => this.endCall());
+    elements.cancelCallButton.addEventListener('click', () => this.cancelCall());
+
+    // Incoming call
+    elements.incomingAccept.addEventListener('click', () => this.acceptIncoming());
+    elements.incomingDecline.addEventListener('click', () => this.declineIncoming());
+
+   // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'Escape') {
+        if (elements.addModal.classList.contains('show')) this.closeAddModal();
+        else if (elements.settingsPanel.classList.contains('show')) this.closeSettings();
+        else if (elements.incomingEl.classList.contains('show')) this.declineIncoming();
+        else if (this.state.screen === 'calling') this.cancelCall();
+      }
+      if (e.key === 'm' && this.state.screen === 'incall') this.toggleMute();
+      if (e.key === 'v' && this.state.screen === 'incall') this.toggleCamera();
+    });
 
     }
 
     init() {
-      this.renderContacts();
-      // this.updateControlIcons();
+      try {
+          this.pipDragger = new PipDragger(elements.pipWrap, elements.callScreen, this.isMobile, this.connectCall);
+          this.pipDragger.setupPipDrag();
+          this.renderContacts();
+          this.updateControlIcons();
+        }
+      catch (err) {
+            console.error("ERROR:", err)
+        }
     }
 }

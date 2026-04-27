@@ -1,6 +1,7 @@
 import { STREAM_CONSTRAINTS } from '../config/constants.js';
 import { elements } from '../ui/elements.js';
 
+// SET VIDEO STUFF HERE
 export class MediaManager {
     constructor() {
         this.localStream = null;

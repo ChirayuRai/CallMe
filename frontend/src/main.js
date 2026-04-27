@@ -33,7 +33,7 @@ class VideoCallApp {
         this.uiManager.setupButtons();
 
         // Setup UI event listeners
-        this.uiManager.setupEventListeners(
+        await this.uiManager.setupEventListeners(
             () => this.handleCall(),
             () => this.handleAcceptCall(),
             () => this.handleDeclineCall()

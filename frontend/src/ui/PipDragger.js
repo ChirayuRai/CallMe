@@ -1,6 +1,4 @@
-// TODO: Just created this class, need to test it somehow. Also haven't quite finished adding everything to where it needs to go, figure that out
-// Next time
-class PipDragger {
+export class PipDragger {
     constructor(pipWrap, callScreen, isMobile, connectCall) {
         this.pipWrap = pipWrap;
         this.callScreen = callScreen;
@@ -116,6 +114,6 @@ class PipDragger {
 
 
     setupPipDrag() {
-        this.setupEventListeners;
+        this.setupEventListeners();
     }
 }

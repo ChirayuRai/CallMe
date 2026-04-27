@@ -47,7 +47,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       },
     };
 
-    // Declare these variables
+    // Declaring as null so all later async stuff doesn't die
     let localStream = null;
     let peerConnection = null;
 
