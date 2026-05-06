@@ -28,12 +28,20 @@ export class UIManager {
             localStream: null,
             facingMode: 'user',
             incomingContact: null,
+            connectionID: null,
+            userID: null,
+            callTimeout: null,
         };
 
     }
 
     setConnectionId(connectionID) {
+        console.log("Connection id:", connectionID);
         this.state.connectionID = connectionID;
+    }
+
+    getConnectionId() {
+        return this.state.connectionID;
     }
 
     getUserId() {
@@ -42,12 +50,14 @@ export class UIManager {
 
     showIncomingCall(callerID, offer) {
         this.state.pendingOffer = { callerID, offer };
-        elements.incomingCallText.textContent = `Receiving call from: ${callerID}`;
-        elements.incomingCallDiv.classList.remove('hidden');
+        console.log("Pending offer within show incoming call:", this.state.pendingOffer);
+        console.log("State after pending offer defined", this.state);
+        elements.incName.textContent = `Receiving call from: ${callerID}`;
+        elements.incomingEl.classList.add('show');
     }
 
     hideIncomingCall() {
-        elements.incomingCallDiv.classList.add('hidden');
+        elements.incomingEl.classList.remove('show');
     }
 
     deletePendingOffer() {
@@ -56,11 +66,17 @@ export class UIManager {
     }
 
     getPendingOffer() {
+        console.log("Pending offer you're about to send from UI manager:", this.state.pendingOffer.offer)
+        console.log("Pending offer state from UI manager:", this.state.pendingOffer)
         return this.state.pendingOffer;
     }
 
     getCallInputValue() {
-        return elements.callInput.value;
+        return elements.connectionInput.value;
+    }
+
+    setLocalStream(localStream) {
+        this.state.localStream = localStream;
     }
 
 
@@ -145,6 +161,7 @@ export class UIManager {
     // ---- Call Flow ----
     startCall(contact) {
       this.state.activeContact = contact;
+      this.closeCallModal();
       this.showScreen('calling');
 
       // Close sidebar on mobile
@@ -156,25 +173,28 @@ export class UIManager {
       elements.callingName.textContent = contact.name;
 
       // Simulate ringing for 3 seconds then connect
-      setTimeout(() => {
+      this.state.callTimout = setTimeout(() => {
         if (this.state.screen === 'calling' && this.state.activeContact === contact) {
           this.connectCall(contact);
         }
-      }, 1000);
+      }, 10000);
     }
 
     async connectCall(contact) {
       this.showScreen('incall');
+      clearTimeout(this.state.callTimeout);
+      console.log("Pending offer from connect call:", this.state.pendingOffer)
 
       // Remote area (simulated)
-      const color = this.getColor(contact.name);
-      elements.remoteArea.innerHTML =
-        '<div class="remote-fallback">' +
-          '<div class="big-avatar" style="background:' + color + '">' + this.getInitials(contact.name) + '</div>' +
-          '<div class="remote-label">' + contact.name + '</div>' +
-        '</div>';
+      // TODO: Figure out what should go here and fix it lol
+      const color = this.getColor("Bob");
+      // elements.remoteArea.innerHTML =
+      //   '<div class="remote-fallback">' +
+      //     '<div class="big-avatar" style="background:' + color + '">' + this.getInitials(contact.name) + '</div>' +
+      //     '<div class="remote-label">' + contact.name + '</div>' +
+      //   '</div>';
 
-      elements.infoName.textContent = contact.name;
+      elements.infoName.textContent = "Bob";
       this.state.callSeconds = 0;
       elements.infoTimer.textContent = '00:00';
 
@@ -188,10 +208,6 @@ export class UIManager {
       this.state.isMuted = false;
       this.state.isCamOff = false;
       this.updateControlIcons();
-
-      // Start local camera
-      await this.startLocalCamera();
-      elements.localVideoPip.srcObject = this.state.localStream;
     }
 
     endCall() {
@@ -364,35 +380,34 @@ export class UIManager {
 
 
     // ---- Incoming Call ----
-    //TODO: Use this when a call is actually incoming
-    // simulateIncoming() {
-    //   // Pick a random contact that isn't the active one
-    //   const pool = this.state.contacts.filter(c => c !== this.state.activeContact);
-    //   if (pool.length === 0) return;
-    //   const contact = pool[Math.floor(Math.random() * pool.length)];
-    //   this.state.incomingContact = contact;
-    //
-    //   this.incAvatar.textContent = this.getInitials(contact.name);
-    //   this.incAvatar.style.background = this.getColor(contact.name);
-    //   this.incName.textContent = contact.name;
-    //
-    //   this.incomingEl.classList.add('show');
-    // }
-    //
+    simulateIncoming() {
+      // Pick a random contact that isn't the active one
+      const pool = this.state.contacts.filter(c => c !== this.state.activeContact);
+      if (pool.length === 0) return;
+      const contact = pool[Math.floor(Math.random() * pool.length)];
+      this.state.incomingContact = contact;
+
+      this.incAvatar.textContent = this.getInitials(contact.name);
+      this.incAvatar.style.background = this.getColor(contact.name);
+      this.incName.textContent = contact.name;
+
+      this.incomingEl.classList.add('show');
+    }
+
     acceptIncoming() {
       elements.incomingEl.classList.remove('show');
-      const contact = this.state.incomingContact;
-      this.state.incomingContact = null;
-
-      // End current call if any
-      if (this.state.screen === 'incall') this.endCall();
-      if (this.state.screen === 'calling') this.cancelCall();
-
-      // Start new call
-      if (contact) {
-        this.state.activeContact = contact;
-        this.connectCall(contact);
-      }
+      // const contact = this.state.incomingContact;
+      // this.state.incomingContact = null;
+      //
+      // // End current call if any
+      // if (this.state.screen === 'incall') this.endCall();
+      // if (this.state.screen === 'calling') this.cancelCall();
+      //
+      // // Start new call
+      // if (contact) {
+      //   this.state.activeContact = contact;
+        this.connectCall("Bob");
+      
     }
 
     declineIncoming() {
@@ -472,6 +487,34 @@ export class UIManager {
       this.renderContacts();
     }
 
+    // ---- Calling with Connection ID ----
+    openCallModal() {
+      elements.connectionInput.value = '';
+      console.log("conn inp exists:", elements.connectionInput)
+      elements.callModal.classList.add('show');
+      console.log("call modals classes:", elements.callModal.classList)
+      setTimeout(() => elements.connectionInput.focus(), 100);
+    }
+
+    closeCallModal() {
+      elements.callModal.classList.remove('show');
+    }
+
+    // TODO: this one
+    callWithConnID() {
+      const id = elements.connectionInput.value.trim();
+      console.log("Id inputted:", id)
+      if (!id) return;
+      this.state.contacts.push({
+        id: this.state.nextId++,
+        name: name,
+        detail: detail || 'No details',
+        online: Math.random() > 0.5
+      });
+      this.closeAddModal();
+      this.renderContacts();
+    }
+
 
     // SETUP METHODS
     setupButtons() {
@@ -491,20 +534,6 @@ export class UIManager {
 
     async setupEventListeners(onCall, onAccept, onDecline) {
 
-        // elements.callButton.addEventListener("click", (e) => {
-        //     e.preventDefault();
-        //     onCall();
-        // });
-        //
-        // elements.incomingCallAcceptButton.addEventListener("click", (e) => {
-        //     e.preventDefault();
-        //     onAccept();
-        // });
-        //
-        // elements.incomingCallDeclineButton.addEventListener("click", (e) => {
-        //     e.preventDefault();
-        //     onDecline();
-        // });
 
     // Mobile menu
     elements.menu.addEventListener('click',() => this.openSidebar());
@@ -520,6 +549,33 @@ export class UIManager {
     elements.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
     elements.detailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.addContact(); });
     elements.addModal.addEventListener('click', (e) => { if (e.target === elements.addModal) this.closeAddModal(); });
+
+    
+    // Call with Connection ID    
+    elements.callButton.addEventListener('click', () => this.openCallModal());
+    elements.cancelModal.addEventListener('click', () => this.closeCallModal());
+    elements.confirmModal.addEventListener('click', () => this.callWithConnID());
+    elements.connectionInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#inp-detail').focus(); });
+    elements.callModal.addEventListener('click', (e) => { if (e.target === elements.callModal) this.closeCallModal(); });
+
+    elements.confirmCallButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        onCall();
+        this.startCall({name: this.getConnectionId()}) 
+    });
+
+    elements.incomingAccept.addEventListener("click", (e) => {
+        e.preventDefault();
+        onAccept();
+        this.connectCall()
+    });
+
+    elements.incomingDecline.addEventListener("click", (e) => {
+        e.preventDefault();
+        onDecline();
+    });
+
+
 
    //  // Settings
     elements.settingsButton.addEventListener('click', () => this.openSettings());
@@ -572,10 +628,11 @@ export class UIManager {
 
     }
 
-    init() {
+    init(localStream) {
       try {
           this.pipDragger = new PipDragger(elements.pipWrap, elements.callScreen, this.isMobile, this.connectCall);
           this.pipDragger.setupPipDrag();
+          this.setLocalStream(localStream);
           this.renderContacts();
           this.updateControlIcons();
         }

@@ -1,7 +1,7 @@
 export const elements = {
     idText: document.getElementById("IdDisplay"),
     callInput: document.getElementById("callInput"),
-    callButton: document.getElementById("callButton"),
+    callButton: document.getElementById("call-btn"),
     incomingCallDiv: document.getElementById("incoming-call"),
     incomingCallText: document.getElementById("incomingCaller"),
     incomingCallAcceptButton: document.getElementById("acceptCall"),
@@ -10,7 +10,7 @@ export const elements = {
     localVideoDiv: document.getElementById("localVideoOnly"),
     localVideoPip: document.getElementById("local-video-pip"),
     localAndRemoteVideoDiv: document.getElementById("localAndRemoteVideo"),
-    remoteVideo: document.getElementById("remoteVideo"),
+    remoteVideo: document.getElementById("remote-video"),
     menu: document.getElementById('menu-btn'),
     mobileSettingsButton: document.getElementById('mobile-settings-btn'),
     cancelCallButton: document.getElementById('cancel-call-btn'),
@@ -53,4 +53,7 @@ export const elements = {
     detailInput: document.getElementById('inp-detail'),
     settingsButton: document.getElementById('settings-btn'),
     toggleMirror: document.getElementById('toggle-mirror'),
+    connectionInput: document.getElementById('inp-conn-id'),
+    callModal     : document.getElementById('call-modal'),
+    confirmCallButton     : document.getElementById('call-confirm'),
 };

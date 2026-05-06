@@ -6,6 +6,7 @@ export class PeerConnectionManager {
         this.mediaManager = mediaManager;
         this.onIceCandidate = onIceCandidate;
         this.onTrack = onTrack;
+        this.iceCandidateQueue = [];  
     }
 
     initialize() {
@@ -13,9 +14,12 @@ export class PeerConnectionManager {
         
         // Add local tracks
         const localStream = this.mediaManager.getLocalStream();
+        console.log("Local stream from peer conn:", localStream)
         localStream.getTracks().forEach(track => {
             this.peerConnection.addTrack(track, localStream);
         });
+        console.log("Local stream after adding tracks:", localStream)
+        console.log("Local stream's tracks after adding tracks:", localStream.getTracks());
 
         // Set up event listeners
         this.peerConnection.addEventListener('icecandidate', (event) => {
@@ -33,26 +37,46 @@ export class PeerConnectionManager {
         console.log("Peer connection initialized successfully");
     }
 
-    async createOffer() {
-        const offer = await this.peerConnection.createOffer();
-        await this.peerConnection.setLocalDescription(offer);
-        return this.peerConnection.localDescription;
+    async flushIceCandidateQueue() {
+        while (this.iceCandidateQueue.length > 0) {
+            const candidate = this.iceCandidateQueue.shift();
+            console.log("Flushing queued ICE candidate");
+            await this.peerConnection.addIceCandidate(candidate);
+        }
+    }
+
+    async setRemoteDescription(description) {
+        await this.peerConnection.setRemoteDescription(description);
+        await this.flushIceCandidateQueue();
     }
 
     async createAnswer(offer) {
         await this.peerConnection.setRemoteDescription(offer);
         const answer = await this.peerConnection.createAnswer();
         await this.peerConnection.setLocalDescription(answer);
-        return this.peerConnection.localDescription;
+        await this.flushIceCandidateQueue();
+        return answer;
     }
 
-    async setRemoteDescription(description) {
-        await this.peerConnection.setRemoteDescription(description);
+    async createOffer() {
+        console.log("About to create offer")
+        const offer = await this.peerConnection.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+        });
+        console.log("Offer:", offer)
+        console.log("Offer sdp:", offer.sdp)
+        await this.peerConnection.setLocalDescription(offer);
+        return offer;
     }
 
     async addIceCandidate(candidate) {
+        if (!this.peerConnection.remoteDescription) {
+            console.log("Remote description not set yet, queuing candidate");
+            this.iceCandidateQueue.push(candidate);
+            return;
+        }
         await this.peerConnection.addIceCandidate(candidate);
-        console.log("Added ICE candidate");
     }
 
     isReady() {

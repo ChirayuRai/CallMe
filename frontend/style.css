@@ -868,6 +868,25 @@ input, select { font-family: inherit; }
   pointer-events: auto;
 }
 
+
+#call-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  transition: opacity 0.2s var(--ease);
+  pointer-events: none;
+}
+
+#call-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .modal-box {
   background: var(--bg-sidebar);
   border-radius: 18px;
@@ -923,6 +942,8 @@ input, select { font-family: inherit; }
 .btn-m-cancel:hover { background: var(--bg-hover); }
 .btn-m-confirm { background: var(--green); color: #fff; }
 .btn-m-confirm:hover { background: var(--green-hover); }
+.btn-m-confirm-call { background: var(--green); color: #fff; }
+.btn-m-confirm-call:hover { background: var(--green-hover); }
 
 /* ===== TRANSITIONS ===== */
 .fade-enter {

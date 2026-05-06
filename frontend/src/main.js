@@ -40,7 +40,7 @@ class VideoCallApp {
         );
 
         // Initialize other important methods in UI Manager
-        this.uiManager.init();
+        this.uiManager.init(this.mediaManager.getLocalStream());
     }
 
     handleIceCandidate(candidate) {
@@ -59,6 +59,7 @@ class VideoCallApp {
                 break;
 
             case "pendingOffer":
+                console.log("Pending offer:", event)
                 this.uiManager.showIncomingCall(
                     event.data.callerID,
                     event.data.offer
@@ -66,6 +67,7 @@ class VideoCallApp {
                 break;
 
             case "recievedAnswer":
+                console.log("Recieved answer:", event.data.answer);
                 if (this.peerConnectionManager.isReady()) {
                     await this.peerConnectionManager.setRemoteDescription(event.data.answer);
                 }
@@ -105,6 +107,7 @@ class VideoCallApp {
 
         try {
             const pendingOffer = this.uiManager.getPendingOffer();
+            console.log("From handle accept call, here's pending offer:", pendingOffer)
             const answer = await this.peerConnectionManager.createAnswer(pendingOffer.offer);
             this.websocketManager.sendAnswer(pendingOffer.callerID, answer);
             this.uiManager.hideIncomingCall();

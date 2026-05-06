@@ -35,21 +35,23 @@ export class WebSocketManager {
     sendOffer(callerID, receiverID, offer) {
         this.send({
             state: "sendOffer",
-            data: { callerID, receiverID, offer }
+            data: { callerID: callerID, receiverID: receiverID, offer: offer }
         });
     }
 
     sendAnswer(to, answer) {
+        console.log("Sending answer:", answer)
+        console.log("Answer sent to:", to)
         this.send({
             state: "sendAnswer",
-            data: { to, answer }
+            data: { to: to, answer: answer }
         });
     }
 
     sendIceCandidate(to, candidate) {
         this.send({
             state: "sendIceCandidate",
-            data: { to, candidate }
+            data: { to: to, candidate: candidate }
         });
     }
 }
